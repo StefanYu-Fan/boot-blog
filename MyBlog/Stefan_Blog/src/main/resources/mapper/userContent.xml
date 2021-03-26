@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stefan.blog.mapper.UserContentMapper">
+
+    <select id="findCategoryByUid"  resultMap="categoryMap">
+        select category,count(1) as num from user_content where u_id = #{uid} and personal = '0' group by category order by num desc
+    </select>
+
+    <resultMap type="com.stefan.blog.model.UserContent" id="categoryMap">
+        <id property="id" column="id" />
+        <result property="category" column="category" />
+        <result property="num" column="num" />
+    </resultMap>
+
+    <insert id="inserContent" parameterType="userContent" useGeneratedKeys="true" keyProperty="id">
+        insert into user_content(id, u_id, title, category, content, personal,rpt_time ,img_url,nick_name,upvote,downvote,comment_num,content_desc) values(#{id}, #{uId},#{title}, #{category},#{content},#{personal},#{rptTime}, #{imgUrl},#{nickName},#{upvote},#{downvote},#{commentNum},#{contentDesc})
+    </insert>
+
+    <!--user_content和user表的连接更新-->
+    <update id="updateByUId" parameterType="com.stefan.blog.model.User">
+        update user_content set user_content.img_url = #{url} where user_content.u_id = #{user.id}
+    </update>
+
+    <!--user_content和user表连接查询-->
+    <select id="findByJoin"  resultMap="joinMap">
+        select u1.*,u2.nick_name nickName,u2.img_url imgUrl from user_content u1 LEFT JOIN user u2 on u1.u_id = u2.id
+        <where>
+            <choose>
+                <when test='id!=null and id!=""'>
+                    u1.id = #{id}
+                </when>
+                <otherwise>
+                    <if test='personal!=null and personal!=""'>
+                        u1.personal = #{personal}
+                    </if>
+                    <if test='personal==null or personal==""'>
+                        u1.personal = '0'
+                    </if>
+                </otherwise>
+            </choose>
+
+        </where>
+        <if test='uId!=null and uId!=""'>
+            and u1.u_id = #{uId}
+        </if>
+        order by u1.rpt_time desc
+    </select>
+
+    <resultMap type="com.stefan.blog.model.UserContent" id="joinMap">
+        <id property="id" column="id" />
+        <result property="uId" column="u_id" />
+        <result property="title" column="title" />
+        <result property="category" column="category" />
+        <result property="personal" column="personal" />
+        <result property="rptTime" column="rpt_time" />
+        <result property="imgUrl" column="img_url" />
+        <result property="nickName" column="nick_name" />
+        <result property="upvote" column="upvote" />
+        <result property="downvote" column="downvote" />
+        <result property="commentNum" column="comment_num" />
+        <result property="content" column="content" />
+        <result property="contentDesc" column="content_desc"/>
+    </resultMap>
+
+</mapper>
